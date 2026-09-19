@@ -2,6 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#222B62">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
@@ -14,67 +19,89 @@
   --in:#222B62;
   --out:#A88B3C;
   --ng:#C8202A;
+  --vh:100vh;      /* JS が実際の可視高さで上書きする（アドレスバー分のズレ対策） */
 }
-*{box-sizing:border-box}
-html,body{height:100%;margin:0}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;overscroll-behavior:none}
 body{
   background:var(--paper);color:var(--ink);
   font-family:'Zen Kaku Gothic New','Hiragino Sans',sans-serif;
   font-size:16px;line-height:1.6;overflow:hidden;
+  touch-action:manipulation;
 }
-.shell{display:flex;height:100vh}
-.main{flex:1;display:flex;flex-direction:column;padding:22px 26px;min-width:0}
-.side{width:300px;flex:none;border-left:1px solid var(--line);padding:22px 20px;overflow-y:auto;background:#EAEFE9}
 
-.head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
-.head h1{font-size:17px;font-weight:700;margin:0}
-.head .campus{font-size:14px;color:var(--muted)}
+/* ---- 全体レイアウト：スマホ縦向けを基準にする ---- */
+.shell{
+  display:flex;flex-direction:column;
+  height:var(--vh);
+  height:100dvh;
+}
+.main{
+  flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 12px;
+  gap:12px;
+}
+.side{
+  flex:none;
+  border-left:none;border-top:1px solid var(--line);
+  padding:16px 18px calc(env(safe-area-inset-bottom,0px) + 16px);
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  background:#EAEFE9;
+  max-height:30dvh;
+}
+
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.head h1{font-size:16px;font-weight:700;margin:0;white-space:nowrap}
+.head .campus{font-size:13px;color:var(--muted);text-align:right}
 
 /* ---- カメラ ---- */
-.stage{position:relative;flex:1;border-radius:22px;overflow:hidden;background:#0D1712;min-height:0}
+.stage{position:relative;flex:1;min-height:0;border-radius:20px;overflow:hidden;background:#0D1712}
 video{width:100%;height:100%;object-fit:cover;display:block}
 .frame{
   position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  width:min(46vh,330px);aspect-ratio:1;border-radius:26px;
+  width:min(74vw,42dvh,320px);aspect-ratio:1;border-radius:24px;
   box-shadow:0 0 0 9999px rgba(13,23,18,.5);
   border:3px solid rgba(255,255,255,.85);
 }
 .hint{
-  position:absolute;left:0;right:0;bottom:20px;text-align:center;
-  color:#fff;font-size:17px;font-weight:500;text-shadow:0 1px 6px rgba(0,0,0,.6);
+  position:absolute;left:0;right:0;bottom:16px;text-align:center;
+  color:#fff;font-size:clamp(14px,3.8vw,17px);font-weight:500;text-shadow:0 1px 6px rgba(0,0,0,.6);
+  padding:0 14px;
 }
 
 /* ---- 結果 ---- */
 .result{
   position:absolute;inset:0;display:none;flex-direction:column;
-  align-items:center;justify-content:center;text-align:center;padding:30px;
+  align-items:center;justify-content:center;text-align:center;padding:6vh 24px;
   background:var(--in);color:#fff;
 }
 .result.show{display:flex}
 .result.out{background:var(--out)}
 .result.ng{background:var(--ng)}
-.result .mark{font-size:56px;line-height:1;margin-bottom:10px}
-.result .name{font-size:clamp(34px,6vw,64px);font-weight:700;line-height:1.2;margin:0}
-.result .msg{font-size:clamp(17px,2.2vw,24px);margin-top:14px;font-weight:500}
-.result .meta{font-size:16px;margin-top:18px;opacity:.9}
-.result .note{font-size:15px;margin-top:10px;opacity:.85}
+.result .mark{font-size:clamp(36px,9vw,56px);line-height:1;margin-bottom:8px}
+.result .name{font-size:clamp(30px,11vw,64px);font-weight:700;line-height:1.2;margin:0;word-break:break-word}
+.result .msg{font-size:clamp(15px,4.5vw,24px);margin-top:12px;font-weight:500}
+.result .meta{font-size:clamp(13px,3.6vw,16px);margin-top:16px;opacity:.9}
+.result .note{font-size:clamp(12px,3.2vw,15px);margin-top:8px;opacity:.85}
 
 /* ---- 手入力 ---- */
-.manual{display:flex;gap:10px;margin-top:16px}
+.manual{display:flex;gap:8px}
 .manual input{
-  flex:1;font-family:inherit;font-size:17px;padding:13px 15px;
+  flex:1;min-width:0;font-family:inherit;font-size:16px;padding:14px 15px;
   border:1px solid var(--line);border-radius:13px;background:#fff;color:var(--ink);
+  -webkit-appearance:none;appearance:none;
 }
 .manual button{
-  font-family:inherit;font-size:16px;font-weight:700;padding:13px 24px;
+  flex:none;font-family:inherit;font-size:16px;font-weight:700;padding:14px 20px;
   border:none;border-radius:13px;background:var(--ink);color:var(--paper);cursor:pointer;
+  min-height:48px;
 }
 .manual input:focus-visible,.manual button:focus-visible{outline:2px solid var(--in);outline-offset:2px}
-.statusline{font-size:13px;color:var(--muted);margin-top:10px}
+.statusline{font-size:13px;color:var(--muted);margin:0;text-align:center}
 
 /* ---- 在室者 ---- */
 .side h2{font-size:14px;font-weight:700;margin:0 0 4px}
-.seats{font-size:54px;font-weight:700;line-height:1;margin:2px 0 10px;color:var(--in)}
+.seats{font-size:44px;font-weight:700;line-height:1;margin:2px 0 10px;color:var(--in)}
 .seats span{font-size:15px;font-weight:400;color:var(--muted);margin-left:6px}
 .seats.few{color:var(--out)}
 .seats.full{color:var(--ng)}
@@ -82,17 +109,22 @@ video{width:100%;height:100%;object-fit:cover;display:block}
 .gauge i{display:block;height:100%;width:0;background:var(--in);transition:width .5s}
 .gauge.few i{background:var(--out)}
 .gauge.full i{background:var(--ng)}
-.count{font-size:19px;font-weight:700;line-height:1.2;margin-bottom:12px;color:var(--ink)}
+.count{font-size:18px;font-weight:700;line-height:1.2;margin-bottom:10px;color:var(--ink)}
 .count span{font-size:13px;font-weight:400;color:var(--muted);margin-left:4px}
-.person{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.person{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
 .person:last-child{border-bottom:none}
 .person .t{color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
 .person.long .t{color:var(--out);font-weight:700}
 .empty{font-size:14px;color:var(--muted);padding-top:8px}
 
-@media (max-width:900px){
-  .shell{flex-direction:column}
-  .side{width:auto;border-left:none;border-top:1px solid var(--line);max-height:34vh}
+/* ---- 横向き・タブレット/PC（幅があり縦長でない画面）は左右2ペインに戻す ---- */
+@media (min-width:820px) and (min-aspect-ratio:1/1){
+  .main{padding:22px 26px;gap:16px}
+  .shell{flex-direction:row}
+  .side{width:300px;flex:none;border-top:none;border-left:1px solid var(--line);max-height:none}
+  .frame{width:min(46vh,330px)}
+  .manual{margin-top:4px}
+  .statusline{text-align:left}
 }
 </style>
 </head>
@@ -118,7 +150,8 @@ video{width:100%;height:100%;object-fit:cover;display:block}
     </div>
 
     <div class="manual">
-      <input type="text" id="manual" placeholder="読み取れないときは生徒IDを入力" autocomplete="off">
+      <input type="text" id="manual" placeholder="生徒IDを入力" autocomplete="off"
+        inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
       <button id="send">受付する</button>
     </div>
     <p class="statusline" id="status">カメラを準備しています…</p>
@@ -402,6 +435,18 @@ function beep(freq, sec){
     o.start(); o.stop(actx.currentTime + sec);
   }catch(e){}
 }
+
+/* ============ 画面サイズ（スマホのアドレスバー分のズレ対策） ============ */
+/**
+ * 100vh はスマホのブラウザだとアドレスバーの表示/非表示で値がぶれる。
+ * dvh 未対応の古いブラウザ向けに、実際に見えている高さを --vh に反映しておく。
+ */
+function syncViewportHeight(){
+  document.documentElement.style.setProperty('--vh', window.innerHeight + 'px');
+}
+syncViewportHeight();
+window.addEventListener('resize', syncViewportHeight);
+window.addEventListener('orientationchange', syncViewportHeight);
 
 /* ============ 起動 ============ */
 initCamera();
