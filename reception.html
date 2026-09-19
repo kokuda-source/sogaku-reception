@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F4F7;
+  --ink:#222B62;
+  --muted:#787A8A;
+  --line:#DCDBE4;
+  --in:#222B62;
+  --out:#A88B3C;
+  --ng:#C8202A;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:'Zen Kaku Gothic New','Hiragino Sans',sans-serif;
+  font-size:16px;line-height:1.6;overflow:hidden;
+}
+.shell{display:flex;height:100vh}
+.main{flex:1;display:flex;flex-direction:column;padding:22px 26px;min-width:0}
+.side{width:300px;flex:none;border-left:1px solid var(--line);padding:22px 20px;overflow-y:auto;background:#EAEFE9}
+
+.head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+.head h1{font-size:17px;font-weight:700;margin:0}
+.head .campus{font-size:14px;color:var(--muted)}
+
+/* ---- カメラ ---- */
+.stage{position:relative;flex:1;border-radius:22px;overflow:hidden;background:#0D1712;min-height:0}
+video{width:100%;height:100%;object-fit:cover;display:block}
+.frame{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:min(46vh,330px);aspect-ratio:1;border-radius:26px;
+  box-shadow:0 0 0 9999px rgba(13,23,18,.5);
+  border:3px solid rgba(255,255,255,.85);
+}
+.hint{
+  position:absolute;left:0;right:0;bottom:20px;text-align:center;
+  color:#fff;font-size:17px;font-weight:500;text-shadow:0 1px 6px rgba(0,0,0,.6);
+}
+
+/* ---- 結果 ---- */
+.result{
+  position:absolute;inset:0;display:none;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:30px;
+  background:var(--in);color:#fff;
+}
+.result.show{display:flex}
+.result.out{background:var(--out)}
+.result.ng{background:var(--ng)}
+.result .mark{font-size:56px;line-height:1;margin-bottom:10px}
+.result .name{font-size:clamp(34px,6vw,64px);font-weight:700;line-height:1.2;margin:0}
+.result .msg{font-size:clamp(17px,2.2vw,24px);margin-top:14px;font-weight:500}
+.result .meta{font-size:16px;margin-top:18px;opacity:.9}
+.result .note{font-size:15px;margin-top:10px;opacity:.85}
+
+/* ---- 手入力 ---- */
+.manual{display:flex;gap:10px;margin-top:16px}
+.manual input{
+  flex:1;font-family:inherit;font-size:17px;padding:13px 15px;
+  border:1px solid var(--line);border-radius:13px;background:#fff;color:var(--ink);
+}
+.manual button{
+  font-family:inherit;font-size:16px;font-weight:700;padding:13px 24px;
+  border:none;border-radius:13px;background:var(--ink);color:var(--paper);cursor:pointer;
+}
+.manual input:focus-visible,.manual button:focus-visible{outline:2px solid var(--in);outline-offset:2px}
+.statusline{font-size:13px;color:var(--muted);margin-top:10px}
+
+/* ---- 在室者 ---- */
+.side h2{font-size:14px;font-weight:700;margin:0 0 4px}
+.seats{font-size:54px;font-weight:700;line-height:1;margin:2px 0 10px;color:var(--in)}
+.seats span{font-size:15px;font-weight:400;color:var(--muted);margin-left:6px}
+.seats.few{color:var(--out)}
+.seats.full{color:var(--ng)}
+.gauge{height:10px;border-radius:10px;background:#DCE3DC;overflow:hidden;margin-bottom:12px}
+.gauge i{display:block;height:100%;width:0;background:var(--in);transition:width .5s}
+.gauge.few i{background:var(--out)}
+.gauge.full i{background:var(--ng)}
+.count{font-size:19px;font-weight:700;line-height:1.2;margin-bottom:12px;color:var(--ink)}
+.count span{font-size:13px;font-weight:400;color:var(--muted);margin-left:4px}
+.person{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.person:last-child{border-bottom:none}
+.person .t{color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
+.person.long .t{color:var(--out);font-weight:700}
+.empty{font-size:14px;color:var(--muted);padding-top:8px}
+
+@media (max-width:900px){
+  .shell{flex-direction:column}
+  .side{width:auto;border-left:none;border-top:1px solid var(--line);max-height:34vh}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="main">
+    <div class="head">
+      <h1>自習室 受付</h1>
+      <span class="campus" id="campus"></span>
+    </div>
+
+    <div class="stage">
+      <video id="cam" playsinline muted></video>
+      <div class="frame" id="frame"></div>
+      <p class="hint" id="hint">カードのQRコードを枠に合わせてください</p>
+      <div class="result" id="result">
+        <div class="mark" id="rmark"></div>
+        <p class="name" id="rname"></p>
+        <p class="msg" id="rmsg"></p>
+        <p class="meta" id="rmeta"></p>
+        <p class="note" id="rnote"></p>
+      </div>
+    </div>
+
+    <div class="manual">
+      <input type="text" id="manual" placeholder="読み取れないときは生徒IDを入力" autocomplete="off">
+      <button id="send">受付する</button>
+    </div>
+    <p class="statusline" id="status">カメラを準備しています…</p>
+  </div>
+
+  <div class="side">
+    <h2>自習室の空き</h2>
+    <p class="seats" id="seats">–<span>席あく</span></p>
+    <div class="gauge"><i id="gaugefill"></i></div>
+    <p class="count" id="count">–<span>人が在室中</span></p>
+    <div id="people"><p class="empty">読み込み中…</p></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+/**
+ * このページは GitHub Pages など、Apps Script の外（単独ページ）で動かす前提。
+ * Apps Script のWebアプリ画面はiframeの中で動くためカメラ(getUserMedia)が
+ * ブラウザのPermissions Policyで禁止されるが、単独ページとして開けばその制約を受けない。
+ *
+ * 呼び出し先（GASのWebアプリ）と受付キー、校舎名はURLのクエリで渡す。
+ * 例）https://xxxx.github.io/yyyy/reception.html
+ *        ?base=https://script.google.com/macros/s/xxx/exec
+ *        &k=受付キー
+ *        &campus=姫路校
+ */
+const qs = new URLSearchParams(location.search);
+const API_BASE = (qs.get('base') || '').trim();
+const API_KEY  = (qs.get('k') || '').trim();
+let CAMPUS = (qs.get('campus') || '').trim();
+
+let busy = false;          // 送信中・結果表示中は読み取りを止める
+let lastCode = '';         // 直前に読んだ値
+let lastAt = 0;
+let canvas, ctx, video;
+
+document.getElementById('campus').textContent = CAMPUS;
+
+if (!API_BASE || !API_KEY) {
+  setStatus('このページのURLに base と k が指定されていません。校舎の管理者に、正しい受付URLをもらってください。');
+} else {
+  refreshRoom();
+}
+
+/**
+ * GASのWebアプリを ?action=... で呼ぶ。
+ * 別ドメイン（GitHub Pages）からの単純なGETリクエストとして送るため、
+ * カスタムヘッダは付けず、プリフライト(OPTIONS)が発生しないようにしている。
+ */
+function apiGet(action, params) {
+  if (!API_BASE || !API_KEY) return Promise.reject(new Error('not-configured'));
+  const u = new URL(API_BASE);
+  u.searchParams.set('action', action);
+  u.searchParams.set('k', API_KEY);
+  Object.keys(params || {}).forEach(function (key) {
+    if (params[key] != null) u.searchParams.set(key, params[key]);
+  });
+  return fetch(u.toString()).then(function (res) {
+    if (!res.ok) throw new Error('http-' + res.status);
+    return res.json();
+  });
+}
+
+/* ============ カメラ ============ */
+/**
+ * この画面でカメラを使えるかを、呼び出す前に判定する。
+ * Apps Script の枠内では許可されないことがあり、そのまま getUserMedia を呼ぶと
+ * コンソールに違反エラーが出る。分かっているなら呼ばない。
+ */
+function cameraAllowed(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
+  try{
+    const pp = document.permissionsPolicy || document.featurePolicy;
+    if(pp && typeof pp.allowsFeature === 'function' && !pp.allowsFeature('camera')){
+      return false;
+    }
+  }catch(e){ /* 判定できない環境では、そのまま試す */ }
+  return true;
+}
+
+async function initCamera(){
+  video = document.getElementById('cam');
+  canvas = document.createElement('canvas');
+  ctx = canvas.getContext('2d', {willReadFrequently:true});
+  if(!cameraAllowed()){
+    cameraOff({name:'Blocked',
+      message:'Permissions policy: camera is not allowed in this document'});
+    return;
+  }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'environment', width:{ideal:1280}, height:{ideal:720}}
+    });
+    video.srcObject = stream;
+    await video.play();
+    setStatus('読み取れます');
+    requestAnimationFrame(scan);
+  }catch(e){
+    cameraOff(e);
+  }
+}
+
+/**
+ * カメラが開けなかったとき。
+ * 原因によって出す文言を変える。「許可を確認してください」では直せない場合がある。
+ */
+function cameraOff(e){
+  const name = (e && e.name) || '';
+  const msg  = String((e && e.message) || '');
+  document.getElementById('frame').style.display = 'none';
+  document.getElementById('hint').textContent = 'バーコードリーダーか、生徒IDの入力で受付できます。';
+
+  let s;
+  if(!navigator.mediaDevices || /Permissions policy|not allowed in this document/i.test(msg)){
+    // Apps Script の枠内ではカメラが許可されないことがある
+    s = 'この画面ではカメラを使えません。バーコードリーダーを接続するか、生徒IDを入力してください。';
+  }else if(name === 'NotAllowedError'){
+    s = 'カメラの使用が許可されていません。アドレスバーのカメラ設定から許可してください。';
+  }else if(name === 'NotFoundError' || name === 'OverconstrainedError'){
+    s = 'カメラが見つかりません。内蔵カメラかUSBカメラを接続してください。';
+  }else if(name === 'NotReadableError'){
+    s = '他のアプリがカメラを使用中です。そのアプリを閉じてから再読み込みしてください。';
+  }else{
+    s = 'カメラを開けませんでした（' + (name || msg || '原因不明') + '）。';
+  }
+  setStatus(s);
+
+  // リーダーからの入力をすぐ受けられるように、入力欄へ移す
+  const m = document.getElementById('manual');
+  if(m) m.focus();
+}
+
+function scan(){
+  if(!busy && video.readyState === video.HAVE_ENOUGH_DATA){
+    const w = video.videoWidth, h = video.videoHeight;
+    if(w && h){
+      // 中央の正方形だけを見る（枠外の誤読を防ぐ）
+      const size = Math.floor(Math.min(w,h)*0.62);
+      canvas.width = size; canvas.height = size;
+      ctx.drawImage(video, (w-size)/2, (h-size)/2, size, size, 0, 0, size, size);
+      const img = ctx.getImageData(0,0,size,size);
+      const code = jsQR(img.data, size, size, {inversionAttempts:'dontInvert'});
+      if(code && code.data) handleCode(code.data.trim());
+    }
+  }
+  requestAnimationFrame(scan);
+}
+
+/* ============ 打刻 ============ */
+function handleCode(raw){
+  const now = Date.now();
+  if(raw === lastCode && now - lastAt < 4000) return;   // 同じカードの連続読みを無視
+  lastCode = raw; lastAt = now;
+  submit(raw);
+}
+
+function submit(studentId){
+  if(busy) return;
+  busy = true;
+  setStatus('送信中…');
+  apiGet('checkin', {
+    studentId: studentId,
+    place: '受付',
+    campus: CAMPUS,
+    clientUuid: uuid()
+  }).then(onResult).catch(()=>{
+    showResult({ok:false, message:'通信できませんでした。もう一度かざしてください。'});
+  });
+}
+
+function onResult(r){
+  showResult(r);
+  if(r.ok && !r.ignored) refreshRoom();
+}
+
+function showResult(r){
+  const el = document.getElementById('result');
+  el.className = 'result show' + (r.ok ? (r.type === 'OUT' ? ' out' : '') : ' ng');
+
+  document.getElementById('rmark').textContent = r.ok ? (r.type === 'OUT' ? '↓' : '↑') : '!';
+  document.getElementById('rname').textContent = r.name || '';
+  document.getElementById('rmsg').textContent  = r.message || '';
+  document.getElementById('rmeta').textContent =
+    (r.ok && r.type === 'OUT' && r.monthMinutes != null)
+      ? '今月の合計 ' + fmt(r.monthMinutes) : '';
+  document.getElementById('rnote').textContent = r.note || '';
+
+  beep(r.ok ? (r.type === 'OUT' ? 660 : 880) : 240, r.ok ? 0.12 : 0.3);
+  setStatus('読み取れます');
+
+  setTimeout(()=>{ el.className = 'result'; busy = false; }, r.ok ? 2600 : 3800);
+}
+
+/* ============ 在室者 ============ */
+function refreshRoom(){
+  if (!API_BASE || !API_KEY) return;
+  apiGet('roomStatus', { campus: CAMPUS }).then(applyRoom).catch(()=>{ refreshRoomFallback(); });
+}
+
+function applyRoom(r){
+  {
+    const list = r.list || [];
+    const seatsEl = document.getElementById('seats');
+    const gauge = document.querySelector('.gauge');
+    const fill = document.getElementById('gaugefill');
+
+    if(r.seats){
+      // 残席が少ないほど色が変わる
+      const cls = r.free === 0 ? 'full' : (r.free <= Math.max(3, Math.round(r.seats*0.1)) ? 'few' : '');
+      seatsEl.className = 'seats ' + cls;
+      gauge.className = 'gauge ' + cls;
+      seatsEl.innerHTML = (r.free === 0 ? '満席' : r.free) +
+        (r.free === 0 ? '' : '<span>席あく</span>');
+      fill.style.width = Math.min(100, r.used / r.seats * 100) + '%';
+      if(r.over > 0) seatsEl.innerHTML = '満席<span>+' + r.over + '人</span>';
+    }else{
+      seatsEl.innerHTML = '–<span>座席数が未設定</span>';
+      fill.style.width = '0%';
+    }
+
+    document.getElementById('count').innerHTML =
+      list.length + '<span>人が在室中' + (r.seats ? ' / ' + r.seats + '席' : '') + '</span>';
+
+    const box = document.getElementById('people');
+    if(!list.length){ box.innerHTML = '<p class="empty">いま在室している生徒はいません。</p>'; return; }
+    box.innerHTML = list.map(p=>`
+      <div class="person ${p.elapsed>=480?'long':''}">
+        <span>${esc(p.studentId)}</span>
+        <span class="t">${fmt(p.elapsed)}</span>
+      </div>`).join('');
+  }
+}
+
+/**
+ * サーバー側が古く roomStatus が無い場合や、通信に失敗した場合の逃げ道。
+ * 在室者一覧だけを取り、空席の表示は伏せる。
+ */
+function refreshRoomFallback(){
+  if (!API_BASE || !API_KEY) return;
+  apiGet('listInRoom', { campus: CAMPUS }).then(list=>{
+    applyRoom({ campus:CAMPUS, seats:0, used:list.length, free:null, over:0, list:list });
+  }).catch(()=>{});
+}
+
+/* ============ 手入力・バーコードリーダー ============ */
+const manual = document.getElementById('manual');
+document.getElementById('send').addEventListener('click', ()=>{
+  const v = manual.value.trim();
+  if(v){ submit(v); manual.value=''; }
+});
+manual.addEventListener('keydown', e=>{
+  if(e.key === 'Enter'){
+    const v = manual.value.trim();
+    if(v){ submit(v); manual.value=''; }
+  }
+});
+// USBのバーコードリーダーは「入力＋Enter」を送ってくるだけなので、
+// どこをクリックしていても手入力欄が拾えるようにしておく
+document.addEventListener('keydown', e=>{
+  if(document.activeElement !== manual && /^[0-9A-Za-z\-]$/.test(e.key)) manual.focus();
+});
+
+/* ============ 小道具 ============ */
+function setStatus(s){ document.getElementById('status').textContent = s; }
+function fmt(min){ const h=Math.floor(min/60), m=min%60; return h? h+'時間'+m+'分' : m+'分'; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function uuid(){
+  if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'x'+Date.now()+Math.random().toString(16).slice(2);
+}
+let actx = null;
+function beep(freq, sec){
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.frequency.value = freq; o.type = 'sine';
+    g.gain.setValueAtTime(0.14, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + sec);
+    o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime + sec);
+  }catch(e){}
+}
+
+/* ============ 起動 ============ */
+initCamera();
+setInterval(refreshRoom, 60000);
+</script>
+</body>
+</html>
