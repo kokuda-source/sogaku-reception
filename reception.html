@@ -3,153 +3,188 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#222B62">
+<meta name="theme-color" content="#0D1029">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
+/* ============================================================
+   自習室 受付（GitHub Pages に置く単独ページ）
+   ・座席管理を使う校舎：左にカメラと操作、右に座席表（iPad横置き）
+   ・使わない校舎：これまでどおり、かざしたら入退室
+   ============================================================ */
 :root{
-  --paper:#F4F4F7;
-  --ink:#222B62;
-  --muted:#787A8A;
-  --line:#DCDBE4;
-  --in:#222B62;
-  --out:#A88B3C;
-  --ng:#C8202A;
-  --vh:100vh;      /* JS が実際の可視高さで上書きする（アドレスバー分のズレ対策） */
+  --paper:#0D1029; --bar:#0A0D22; --card:#10143A;
+  --ink:#EFE9DA; --hi:#F7F2E6; --muted:#9E9BA6;
+  --gold:#C9AE6A; --line:rgba(201,174,106,.32);
+  --used:#1B2050; --ng:#C8202A; --out:#8C6F2C;
+  --en:'Cormorant Garamond','Shippori Mincho B1',serif;
+  --vh:100vh;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0;overscroll-behavior:none}
-body{
-  background:var(--paper);color:var(--ink);
+body{background:var(--paper);color:var(--ink);
   font-family:'Zen Kaku Gothic New','Hiragino Sans',sans-serif;
-  font-size:16px;line-height:1.6;overflow:hidden;
-  touch-action:manipulation;
-}
+  font-size:16px;line-height:1.6;overflow:hidden;touch-action:manipulation}
+button{font-family:inherit;cursor:pointer}
+.num{font-family:var(--en);font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1}
 
-/* ---- 全体レイアウト：スマホ縦向けを基準にする ---- */
-.shell{
-  display:flex;flex-direction:column;
-  height:var(--vh);
-  height:100dvh;
-}
-.main{
-  flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;
-  padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 12px;
-  gap:12px;
-}
-.side{
-  flex:none;
-  border-left:none;border-top:1px solid var(--line);
-  padding:16px 18px calc(env(safe-area-inset-bottom,0px) + 16px);
-  overflow-y:auto;-webkit-overflow-scrolling:touch;
-  background:#EAEFE9;
-  max-height:30dvh;
-}
+.shell{display:flex;flex-direction:column;height:var(--vh);height:100dvh}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 12px;gap:12px;background:var(--bar)}
+.side{flex:none;border-top:1px solid var(--line);padding:16px 18px calc(env(safe-area-inset-bottom,0px) + 16px);
+  overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:34dvh}
 
-.head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.head h1{font-size:16px;font-weight:700;margin:0;white-space:nowrap}
-.head .campus{font-size:13px;color:var(--muted);text-align:right}
+.head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.head h1{font-family:var(--en);font-size:15px;font-weight:600;letter-spacing:.28em;color:var(--gold);margin:0;white-space:nowrap}
+.head .campus{font-family:'Shippori Mincho B1',serif;font-size:16px;color:var(--hi);letter-spacing:.12em}
 
 /* ---- カメラ ---- */
-.stage{position:relative;flex:1;min-height:0;border-radius:20px;overflow:hidden;background:#0D1712}
+.stage{position:relative;flex:1;min-height:0;border:1px solid var(--line);overflow:hidden;background:#05071A}
 video{width:100%;height:100%;object-fit:cover;display:block}
-.frame{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  width:min(74vw,42dvh,320px);aspect-ratio:1;border-radius:24px;
-  box-shadow:0 0 0 9999px rgba(13,23,18,.5);
-  border:3px solid rgba(255,255,255,.85);
-}
-.hint{
-  position:absolute;left:0;right:0;bottom:16px;text-align:center;
-  color:#fff;font-size:clamp(14px,3.8vw,17px);font-weight:500;text-shadow:0 1px 6px rgba(0,0,0,.6);
-  padding:0 14px;
-}
+.frame{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:min(74vw,42dvh,300px);aspect-ratio:1;box-shadow:0 0 0 9999px rgba(5,7,26,.55);border:2px solid var(--gold)}
+.hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;color:#fff;font-size:15px;font-weight:500;
+  text-shadow:0 1px 6px rgba(0,0,0,.7);padding:0 14px}
 
-/* ---- 結果 ---- */
-.result{
-  position:absolute;inset:0;display:none;flex-direction:column;
-  align-items:center;justify-content:center;text-align:center;padding:6vh 24px;
-  background:var(--in);color:#fff;
-}
+/* ---- 結果（入室・退室・移動・エラー） ---- */
+.result{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:5vh 22px;background:var(--paper);border:2px solid var(--gold)}
 .result.show{display:flex}
-.result.out{background:var(--out)}
-.result.ng{background:var(--ng)}
-.result .mark{font-size:clamp(36px,9vw,56px);line-height:1;margin-bottom:8px}
-.result .name{font-size:clamp(30px,11vw,64px);font-weight:700;line-height:1.2;margin:0;word-break:break-word}
-.result .msg{font-size:clamp(15px,4.5vw,24px);margin-top:12px;font-weight:500}
-.result .meta{font-size:clamp(13px,3.6vw,16px);margin-top:16px;opacity:.9}
-.result .note{font-size:clamp(12px,3.2vw,15px);margin-top:8px;opacity:.85}
+.result.out{border-color:var(--out);background:#141633}
+.result.ng{border-color:var(--ng);background:#2A0F1C}
+.result .mark{font-family:var(--en);font-size:18px;letter-spacing:.3em;color:var(--gold);margin-bottom:10px}
+.result.ng .mark{color:#FF8E92}
+.result .name{font-family:'Shippori Mincho B1',serif;font-size:clamp(26px,4.4vw,40px);font-weight:700;line-height:1.25;margin:0;color:var(--hi);word-break:break-word}
+.result .msg{font-size:clamp(16px,2.2vw,21px);margin-top:12px;font-weight:500}
+.result .big{font-family:var(--en);font-size:64px;line-height:1;color:var(--gold);margin-top:10px;font-variant-numeric:lining-nums}
+.result .meta{font-size:15px;margin-top:12px;color:var(--muted)}
+.result .note{font-size:13px;margin-top:8px;color:var(--muted)}
 
 /* ---- 手入力 ---- */
 .manual{display:flex;gap:8px}
-.manual input{
-  flex:1;min-width:0;font-family:inherit;font-size:16px;padding:14px 15px;
-  border:1px solid var(--line);border-radius:13px;background:#fff;color:var(--ink);
-  -webkit-appearance:none;appearance:none;
-}
-.manual button{
-  flex:none;font-family:inherit;font-size:16px;font-weight:700;padding:14px 20px;
-  border:none;border-radius:13px;background:var(--ink);color:var(--paper);cursor:pointer;
-  min-height:48px;
-}
-.manual input:focus-visible,.manual button:focus-visible{outline:2px solid var(--in);outline-offset:2px}
-.statusline{font-size:13px;color:var(--muted);margin:0;text-align:center}
+.manual input{flex:1;min-width:0;font-family:inherit;font-size:16px;padding:13px 14px;border:1px solid var(--line);
+  background:#0F1338;color:var(--ink);-webkit-appearance:none;appearance:none;border-radius:0}
+.manual input::placeholder{color:rgba(239,233,218,.35)}
+.manual button{flex:none;font-size:15px;font-weight:700;padding:13px 18px;border:1px solid var(--gold);
+  background:transparent;color:var(--gold);min-height:48px;letter-spacing:.1em}
+.statusline{font-size:12px;color:var(--muted);margin:0;text-align:center}
 
-/* ---- 在室者 ---- */
-.side h2{font-size:14px;font-weight:700;margin:0 0 4px}
-.seats{font-size:44px;font-weight:700;line-height:1;margin:2px 0 10px;color:var(--in)}
-.seats span{font-size:15px;font-weight:400;color:var(--muted);margin-left:6px}
-.seats.few{color:var(--out)}
-.seats.full{color:var(--ng)}
-.gauge{height:10px;border-radius:10px;background:#DCE3DC;overflow:hidden;margin-bottom:12px}
-.gauge i{display:block;height:100%;width:0;background:var(--in);transition:width .5s}
-.gauge.few i{background:var(--out)}
-.gauge.full i{background:var(--ng)}
-.count{font-size:18px;font-weight:700;line-height:1.2;margin-bottom:10px;color:var(--ink)}
+/* ---- 座席をえらぶ／退室するの操作パネル ---- */
+.panel{display:none;flex-direction:column;gap:12px;flex:1;min-height:0}
+.panel.show{display:flex}
+.panel .kick{font-family:var(--en);font-size:14px;font-weight:600;letter-spacing:.28em;color:var(--gold)}
+.panel .who{font-family:'Shippori Mincho B1',serif;font-size:28px;font-weight:700;color:var(--hi);line-height:1.25;letter-spacing:.04em;word-break:break-word}
+.panel .ask{font-size:15px;color:rgba(239,233,218,.78)}
+.panel .chosen{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(201,174,106,.45);
+  border-bottom:1px solid rgba(201,174,106,.45);padding:12px 0;margin-top:2px}
+.panel .chosen span{font-family:'Shippori Mincho B1',serif;font-size:16px}
+.panel .chosen b{font-family:var(--en);font-size:52px;font-weight:600;line-height:1;color:var(--gold);font-variant-numeric:lining-nums}
+.panel .chosen b small{font-family:'Zen Kaku Gothic New',sans-serif;font-size:15px;color:var(--ink);margin-left:3px}
+.pbtn{width:100%;min-height:54px;font-size:16px;letter-spacing:.1em;border:1px solid rgba(239,233,218,.32);
+  background:transparent;color:var(--ink)}
+.pbtn.gold{background:var(--gold);border-color:var(--gold);color:#0D1029;font-weight:700;letter-spacing:.16em;min-height:60px;font-size:18px}
+.pbtn.line{border-color:var(--gold);color:var(--gold)}
+.pbtn:disabled{opacity:.35}
+.pbtn .cd{font-family:var(--en);font-variant-numeric:lining-nums;margin-left:6px}
+.panel .foot{margin-top:auto;font-size:12px;color:rgba(239,233,218,.5)}
+.panel .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ---- 座席表 ---- */
+.seatwrap{display:none;flex-direction:column;min-height:0;flex:1}
+.seatwrap.show{display:flex}
+.seathead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
+.seathead h2{font-family:'Shippori Mincho B1',serif;font-size:19px;font-weight:700;letter-spacing:.1em;color:var(--hi);margin:0}
+.seathead .cnt{font-size:14px;color:rgba(239,233,218,.75);white-space:nowrap}
+.seathead .cnt b{font-family:var(--en);font-size:26px;font-weight:600;color:var(--gold);font-variant-numeric:lining-nums;margin:0 2px}
+.seathead .cnt i{font-style:normal;margin-left:10px;font-size:12px;color:var(--muted)}
+.map{flex:1;min-height:0;display:grid;gap:4px 3px;position:relative}
+.seat{display:flex;align-items:center;justify-content:center;position:relative;border:1px solid rgba(201,174,106,.62);
+  background:transparent;color:var(--ink);font-family:var(--en);font-size:clamp(13px,1.5vw,17px);font-weight:600;
+  font-variant-numeric:lining-nums tabular-nums;padding:0;min-height:0;border-radius:0}
+.seat.k{background:rgba(201,174,106,.10)}
+.seat.k::after{content:'高3';position:absolute;right:3px;top:1px;font-family:'Zen Kaku Gothic New',sans-serif;
+  font-size:9px;font-weight:700;color:var(--gold);opacity:.85;letter-spacing:0}
+.seat.u{background:var(--used);border-color:var(--used);color:rgba(239,233,218,.28)}
+.seat.u::after{opacity:.35}
+.seat.x{border-style:dashed;border-color:rgba(239,233,218,.25);color:rgba(239,233,218,.3);background:transparent}
+.seat.no{opacity:.28}
+.seat.cur{outline:2px solid var(--gold);outline-offset:-2px;color:var(--gold)}
+.seat.last{box-shadow:inset 0 0 0 2px var(--gold)}
+.seat.sel{background:var(--gold);border-color:var(--gold);color:#0D1029}
+.seat.sel::after{color:#0D1029}
+.picking .seat.can{cursor:pointer}
+.picking .seat.can:active{transform:scale(.96)}
+.door{font-size:12px;letter-spacing:.2em;color:var(--gold);text-align:center;align-self:start;padding-top:2px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:10px;font-size:12px;color:rgba(239,233,218,.75)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:20px;height:12px;border:1px solid rgba(201,174,106,.62)}
+.legend i.k{background:rgba(201,174,106,.18)}
+.legend i.u{background:var(--used);border-color:var(--used)}
+.legend i.s{background:var(--gold);border-color:var(--gold)}
+.legend i.x{border-style:dashed;border-color:rgba(239,233,218,.3)}
+
+/* ---- これまでの在室者表示（座席管理を使わない校舎） ---- */
+.legacy h2{font-family:'Shippori Mincho B1',serif;font-size:15px;font-weight:700;margin:0 0 4px;color:var(--hi)}
+.seats{font-family:var(--en);font-size:44px;font-weight:600;line-height:1;margin:2px 0 10px;color:var(--gold);font-variant-numeric:lining-nums}
+.seats span{font-family:'Zen Kaku Gothic New',sans-serif;font-size:14px;font-weight:400;color:var(--muted);margin-left:6px}
+.seats.few{color:#E3B65C}.seats.full{color:#FF8E92}
+.gauge{height:4px;background:var(--used);overflow:hidden;margin-bottom:12px}
+.gauge i{display:block;height:100%;width:0;background:var(--gold);transition:width .5s}
+.count{font-size:17px;font-weight:700;line-height:1.2;margin-bottom:10px}
 .count span{font-size:13px;font-weight:400;color:var(--muted);margin-left:4px}
-.person{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
-.person:last-child{border-bottom:none}
+.person{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid rgba(201,174,106,.16);font-size:14px}
 .person .t{color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
-.person.long .t{color:var(--out);font-weight:700}
+.person.long .t{color:#E3B65C;font-weight:700}
 .empty{font-size:14px;color:var(--muted);padding-top:8px}
 
-/* ---- 横向き・タブレット/PC（幅があり縦長でない画面）は左右2ペインに戻す ---- */
+/* ---- 横向き・タブレット：左右2ペイン ---- */
 @media (min-width:820px) and (min-aspect-ratio:1/1){
-  .main{padding:22px 26px;gap:16px}
   .shell{flex-direction:row}
-  .side{width:300px;flex:none;border-top:none;border-left:1px solid var(--line);max-height:none}
-  .frame{width:min(46vh,330px)}
-  .manual{margin-top:4px}
+  .main{width:360px;flex:none;padding:20px 24px;gap:14px;border-right:1px solid var(--line)}
+  .side{flex:1;border-top:none;max-height:none;padding:20px 28px 18px;display:flex;flex-direction:column}
+  .legacy-only .main{width:auto;flex:1}
+  .legacy-only .side{width:300px;flex:none}
+  .frame{width:min(36vh,260px)}
   .statusline{text-align:left}
 }
 </style>
 </head>
 <body>
-<div class="shell">
+<div class="shell" id="shell">
   <div class="main">
     <div class="head">
-      <h1>自習室 受付</h1>
+      <h1>RECEPTION</h1>
       <span class="campus" id="campus"></span>
     </div>
 
-    <div class="stage">
+    <div class="stage" id="stage">
       <video id="cam" playsinline muted></video>
       <div class="frame" id="frame"></div>
-      <p class="hint" id="hint">カードのQRコードを枠に合わせてください</p>
+      <p class="hint" id="hint">QRコードを枠に合わせてください</p>
       <div class="result" id="result">
         <div class="mark" id="rmark"></div>
         <p class="name" id="rname"></p>
+        <p class="big num" id="rbig"></p>
         <p class="msg" id="rmsg"></p>
         <p class="meta" id="rmeta"></p>
         <p class="note" id="rnote"></p>
       </div>
     </div>
 
-    <div class="manual">
+    <!-- 座席をえらぶ・退室する（かざした後だけ出る） -->
+    <div class="panel" id="panel">
+      <div class="kick" id="pkick">CHECK IN</div>
+      <div class="who" id="pwho"></div>
+      <div class="ask" id="pask"></div>
+      <div id="pbody"></div>
+      <p class="foot" id="pfoot"></p>
+    </div>
+
+    <div class="manual" id="manualrow">
       <input type="text" id="manual" placeholder="生徒IDを入力" autocomplete="off"
         inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
       <button id="send">受付する</button>
@@ -158,11 +193,26 @@ video{width:100%;height:100%;object-fit:cover;display:block}
   </div>
 
   <div class="side">
-    <h2>自習室の空き</h2>
-    <p class="seats" id="seats">–<span>席あく</span></p>
-    <div class="gauge"><i id="gaugefill"></i></div>
-    <p class="count" id="count">–<span>人が在室中</span></p>
-    <div id="people"><p class="empty">読み込み中…</p></div>
+    <!-- 座席管理を使う校舎 -->
+    <div class="seatwrap" id="seatwrap">
+      <div class="seathead">
+        <h2 id="roomttl">自習室</h2>
+        <div class="cnt" id="seatcnt"></div>
+      </div>
+      <div class="map" id="map"></div>
+      <div class="legend">
+        <span><i></i>空き</span><span><i class="k"></i>高3専用</span><span><i class="u"></i>使用中</span>
+        <span><i class="s"></i>えらんだ席</span><span><i class="x"></i>使えない席</span>
+      </div>
+    </div>
+    <!-- 使わない校舎（これまでの表示） -->
+    <div class="legacy" id="legacy" style="display:none">
+      <h2>自習室の空き</h2>
+      <p class="seats" id="seats">–<span>席あく</span></p>
+      <div class="gauge"><i id="gaugefill"></i></div>
+      <p class="count" id="count">–<span>人が在室中</span></p>
+      <div id="people"><p class="empty">読み込み中…</p></div>
+    </div>
   </div>
 </div>
 
@@ -170,38 +220,36 @@ video{width:100%;height:100%;object-fit:cover;display:block}
 <script>
 /**
  * このページは GitHub Pages など、Apps Script の外（単独ページ）で動かす前提。
- * Apps Script のWebアプリ画面はiframeの中で動くためカメラ(getUserMedia)が
- * ブラウザのPermissions Policyで禁止されるが、単独ページとして開けばその制約を受けない。
- *
- * 呼び出し先（GASのWebアプリ）と受付キー、校舎名はURLのクエリで渡す。
- * 例）https://xxxx.github.io/yyyy/reception.html
- *        ?base=https://script.google.com/macros/s/xxx/exec
- *        &k=受付キー
- *        &campus=姫路校
+ *   https://xxxx.github.io/yyyy/reception.html?base=<ウェブアプリURL>&k=<受付キー>&campus=姫路校
+ * 座席管理を使う校舎かどうかは、サーバーの座席表（seatMap）が返ってくるかで決まる。
  */
 const qs = new URLSearchParams(location.search);
 const API_BASE = (qs.get('base') || '').trim();
 const API_KEY  = (qs.get('k') || '').trim();
-let CAMPUS = (qs.get('campus') || '').trim();
+const CAMPUS = (qs.get('campus') || '').trim();
 
-let busy = false;          // 送信中・結果表示中は読み取りを止める
-let lastCode = '';         // 直前に読んだ値
-let lastAt = 0;
+const PICK_SEC = 40;      // 席を選ぶ時間。過ぎたら何も記録せずに戻る
+const OUT_SEC  = 6;       // 在室中にかざしたとき、何もしなければ退室にする秒数
+// 入口の位置（座席表の下に「入口」と出す列）
+const DOORS = { '姫路校': 9 };
+
+let busy = false;         // 送信中・操作中は読み取りを止める
+let lastCode = '', lastAt = 0;
 let canvas, ctx, video;
+let SEATMODE = false;     // 座席管理を使う校舎か（座席表が取れたら true）
+let VIEW = null;          // いまの座席表
+let FLOW = null;          // いまの操作 {mode:'pick'|'room'|'move', ticket, name, hs3, sel, last, cur}
+let timer = null, tickT = null;
 
 document.getElementById('campus').textContent = CAMPUS;
+document.getElementById('roomttl').textContent = (CAMPUS || '') + ' 自習室';
 
 if (!API_BASE || !API_KEY) {
   setStatus('このページのURLに base と k が指定されていません。校舎の管理者に、正しい受付URLをもらってください。');
 } else {
-  refreshRoom();
+  loadMap(true);
 }
 
-/**
- * GASのWebアプリを ?action=... で呼ぶ。
- * 別ドメイン（GitHub Pages）からの単純なGETリクエストとして送るため、
- * カスタムヘッダは付けず、プリフライト(OPTIONS)が発生しないようにしている。
- */
 function apiGet(action, params) {
   if (!API_BASE || !API_KEY) return Promise.reject(new Error('not-configured'));
   const u = new URL(API_BASE);
@@ -210,38 +258,30 @@ function apiGet(action, params) {
   Object.keys(params || {}).forEach(function (key) {
     if (params[key] != null) u.searchParams.set(key, params[key]);
   });
-  return fetch(u.toString()).then(function (res) {
+  // 応答が返らないまま固まらないように、15秒で打ち切る
+  const ctl = window.AbortController ? new AbortController() : null;
+  const to = ctl ? setTimeout(function () { ctl.abort(); }, 15000) : null;
+  return fetch(u.toString(), ctl ? { signal: ctl.signal } : undefined).then(function (res) {
+    if (to) clearTimeout(to);
     if (!res.ok) throw new Error('http-' + res.status);
     return res.json();
-  });
+  }, function (e) { if (to) clearTimeout(to); throw e; });
 }
 
 /* ============ カメラ ============ */
-/**
- * この画面でカメラを使えるかを、呼び出す前に判定する。
- * Apps Script の枠内では許可されないことがあり、そのまま getUserMedia を呼ぶと
- * コンソールに違反エラーが出る。分かっているなら呼ばない。
- */
 function cameraAllowed(){
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
   try{
     const pp = document.permissionsPolicy || document.featurePolicy;
-    if(pp && typeof pp.allowsFeature === 'function' && !pp.allowsFeature('camera')){
-      return false;
-    }
-  }catch(e){ /* 判定できない環境では、そのまま試す */ }
+    if(pp && typeof pp.allowsFeature === 'function' && !pp.allowsFeature('camera')) return false;
+  }catch(e){}
   return true;
 }
-
 async function initCamera(){
   video = document.getElementById('cam');
   canvas = document.createElement('canvas');
   ctx = canvas.getContext('2d', {willReadFrequently:true});
-  if(!cameraAllowed()){
-    cameraOff({name:'Blocked',
-      message:'Permissions policy: camera is not allowed in this document'});
-    return;
-  }
+  if(!cameraAllowed()){ cameraOff({name:'Blocked', message:'Permissions policy: camera is not allowed in this document'}); return; }
   try{
     const stream = await navigator.mediaDevices.getUserMedia({
       video:{facingMode:'environment', width:{ideal:1280}, height:{ideal:720}}
@@ -250,46 +290,25 @@ async function initCamera(){
     await video.play();
     setStatus('読み取れます');
     requestAnimationFrame(scan);
-  }catch(e){
-    cameraOff(e);
-  }
+  }catch(e){ cameraOff(e); }
 }
-
-/**
- * カメラが開けなかったとき。
- * 原因によって出す文言を変える。「許可を確認してください」では直せない場合がある。
- */
 function cameraOff(e){
-  const name = (e && e.name) || '';
-  const msg  = String((e && e.message) || '');
+  const name = (e && e.name) || '', msg = String((e && e.message) || '');
   document.getElementById('frame').style.display = 'none';
   document.getElementById('hint').textContent = 'バーコードリーダーか、生徒IDの入力で受付できます。';
-
   let s;
-  if(!navigator.mediaDevices || /Permissions policy|not allowed in this document/i.test(msg)){
-    // Apps Script の枠内ではカメラが許可されないことがある
-    s = 'この画面ではカメラを使えません。バーコードリーダーを接続するか、生徒IDを入力してください。';
-  }else if(name === 'NotAllowedError'){
-    s = 'カメラの使用が許可されていません。アドレスバーのカメラ設定から許可してください。';
-  }else if(name === 'NotFoundError' || name === 'OverconstrainedError'){
-    s = 'カメラが見つかりません。内蔵カメラかUSBカメラを接続してください。';
-  }else if(name === 'NotReadableError'){
-    s = '他のアプリがカメラを使用中です。そのアプリを閉じてから再読み込みしてください。';
-  }else{
-    s = 'カメラを開けませんでした（' + (name || msg || '原因不明') + '）。';
-  }
+  if(!navigator.mediaDevices || /Permissions policy|not allowed in this document/i.test(msg)) s = 'この画面ではカメラを使えません。バーコードリーダーを接続するか、生徒IDを入力してください。';
+  else if(name === 'NotAllowedError') s = 'カメラの使用が許可されていません。アドレスバーのカメラ設定から許可してください。';
+  else if(name === 'NotFoundError' || name === 'OverconstrainedError') s = 'カメラが見つかりません。';
+  else if(name === 'NotReadableError') s = '他のアプリがカメラを使用中です。そのアプリを閉じてから再読み込みしてください。';
+  else s = 'カメラを開けませんでした（' + (name || msg || '原因不明') + '）。';
   setStatus(s);
-
-  // リーダーからの入力をすぐ受けられるように、入力欄へ移す
-  const m = document.getElementById('manual');
-  if(m) m.focus();
+  const m = document.getElementById('manual'); if(m) m.focus();
 }
-
 function scan(){
   if(!busy && video.readyState === video.HAVE_ENOUGH_DATA){
     const w = video.videoWidth, h = video.videoHeight;
     if(w && h){
-      // 中央の正方形だけを見る（枠外の誤読を防ぐ）
       const size = Math.floor(Math.min(w,h)*0.62);
       canvas.width = size; canvas.height = size;
       ctx.drawImage(video, (w-size)/2, (h-size)/2, size, size, 0, 0, size, size);
@@ -301,7 +320,7 @@ function scan(){
   requestAnimationFrame(scan);
 }
 
-/* ============ 打刻 ============ */
+/* ============ かざしたとき ============ */
 function handleCode(raw){
   const now = Date.now();
   if(raw === lastCode && now - lastAt < 4000) return;   // 同じカードの連続読みを無視
@@ -313,112 +332,328 @@ function submit(studentId){
   if(busy) return;
   busy = true;
   setStatus('送信中…');
-  apiGet('checkin', {
-    studentId: studentId,
-    place: '受付',
-    campus: CAMPUS,
-    clientUuid: uuid()
-  }).then(onResult).catch(()=>{
-    showResult({ok:false, message:'通信できませんでした。もう一度かざしてください。'});
+  if(!SEATMODE){
+    apiGet('checkin', { studentId: studentId, place: '受付', campus: CAMPUS, clientUuid: uuid() })
+      .then(onLegacyResult).catch(netFail);
+    return;
+  }
+  apiGet('seatScan', { studentId: studentId, campus: CAMPUS, clientUuid: uuid() }).then(function (r) {
+    if(r.seats) applyView(r);
+    if(!r.ok || r.ignored){ showResult(r); return; }
+    if(r.type){ showResult(r); loadMap(); return; }        // 座席を使わない扱いで、すでに入室した
+    if(r.mode === 'pick') startPick(r);
+    else if(r.mode === 'room') startRoom(r);
+    else showResult({ok:false, message:'受付できませんでした。もう一度かざしてください。'});
+  }).catch(netFail);
+}
+function netFail(){ showResult({ok:false, message:'通信できませんでした。もう一度かざしてください。'}); }
+
+/* ---- 座席をえらぶ（在室していない生徒） ---- */
+function startPick(r){
+  FLOW = { mode:'pick', ticket:r.ticket, name:r.name, hs3:r.hs3, sel:'', last:r.lastSeat || '', cur:'', cu:uuid(), sending:false };
+  openPanel('CHECK IN', r.name, r.full ? r.message : '座席をえらんでください。');
+  if(r.note) document.getElementById('pfoot').textContent = r.note;
+  renderPickBody();
+  startCountdown(PICK_SEC, cancelFlow);
+}
+function renderPickBody(){
+  const last = FLOW.last ? seatById(FLOW.last) : null;
+  const sel = FLOW.sel ? seatById(FLOW.sel) : null;
+  const isMove = FLOW.mode === 'move';
+  document.getElementById('pbody').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${last && last.ok && !isMove ? `<button class="pbtn line" data-seat="${esc(last.id)}" ${FLOW.sending ? 'disabled' : ''}>前回と同じ席（${last.n}番）</button>` : ''}
+      <button class="pbtn" onclick="autoPick()" ${FLOW.sending ? 'disabled' : ''}>おまかせで選ぶ</button>
+      <div class="chosen"><span>えらんだ席</span><b>${sel ? sel.n + '<small>番</small>' : '<small>座席表から選んでください</small>'}</b></div>
+      <button class="pbtn gold" id="gobtn" onclick="confirmSeat()" ${sel && !FLOW.sending ? '' : 'disabled'}>${FLOW.sending ? '記録しています…' : (isMove ? 'この席に移る' : 'この席でスタート')}</button>
+      <button class="pbtn" onclick="cancelFlow()" ${FLOW.sending ? 'disabled' : ''}>やめる<span class="cd" id="cd"></span></button>
+    </div>`;
+  drawMap();
+}
+function selectSeat(id){
+  if(!FLOW || FLOW.sending || (FLOW.mode !== 'pick' && FLOW.mode !== 'move')) return;
+  const s = seatById(id);
+  if(!s || !s.ok) return;
+  FLOW.sel = id;
+  renderPickBody();
+}
+function autoPick(){
+  if(!VIEW || !FLOW || FLOW.sending) return;
+  const c = VIEW.seats.filter(function (s) { return s.ok && s.id !== FLOW.cur; });
+  if(!c.length){ toastStatus('いま使える席がありません。'); return; }
+  // 両隣が空いている席を優先する（集中しやすいように）
+  const freeAt = {}; VIEW.seats.forEach(function (s) { freeAt[s.c + ':' + s.r] = s.s === 0; });
+  const lonely = c.filter(function (s) { return freeAt[s.c + ':' + (s.r - 1)] !== false && freeAt[s.c + ':' + (s.r + 1)] !== false; });
+  const pool = lonely.length ? lonely : c;
+  selectSeat(pool[Math.floor(Math.random() * pool.length)].id);
+}
+function confirmSeat(){
+  if(!FLOW || !FLOW.sel || FLOW.sending) return;
+  stopCountdown();                       // 送っている間に「取り消し」にならないように
+  FLOW.sending = true;
+  renderPickBody();
+  const flow = FLOW;
+  const action = flow.mode === 'move' ? 'seatMove' : 'seatStart';
+  apiGet(action, { ticket: flow.ticket, seatId: flow.sel, clientUuid: flow.cu }).then(function (r) {
+    if(FLOW !== flow) return;            // もう別の操作に移っている
+    if(r.seats) applyView(r);
+    if(!r.ok && r.retry){                // 埋まった・選べない席：選び直してもらう
+      flow.sending = false; flow.sel = '';
+      document.getElementById('pask').textContent = r.message;
+      beep(240, .25);
+      renderPickBody();
+      startCountdown(PICK_SEC, cancelFlow);
+      return;
+    }
+    endFlow();
+    showResult(r);
+    loadMap();
+  }).catch(function () {
+    if(FLOW !== flow) return;
+    // 届いたかどうか分からない。かざし直してもらえば、入室できていれば「退室しますか？」が出る
+    flow.sending = false;
+    endFlow();
+    showResult({ ok:false, message:'通信できませんでした。もう一度かざしてください。「受付済み」か「退室しますか？」と出たら入室できています（そのときは「やめる」）。' });
+    loadMap();
   });
 }
 
-function onResult(r){
-  showResult(r);
-  if(r.ok && !r.ignored) refreshRoom();
+/* ---- 在室中の生徒：退室する／席を変える ---- */
+function startRoom(r){
+  FLOW = { mode:'room', ticket:r.ticket, name:r.name, hs3:r.hs3, sel:'', last:'', cur:r.currentSeat || '', cu:uuid(), sending:false };
+  // 入室して間もない（5分未満）ときは、うっかりかざした可能性が高いので、自動では退室にしない
+  const early = (r.elapsed || 0) < 5;
+  openPanel('IN ROOM', r.name, r.currentNo ? 'いまの席は ' + r.currentNo + '番です。' : '入室中です（席の記録はありません）。');
+  if(r.note) document.getElementById('pfoot').textContent = r.note;
+  document.getElementById('pbody').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="pbtn gold" onclick="doOut()">退室する${early ? '' : '<span class="cd" id="cd"></span>'}</button>
+      <button class="pbtn line" onclick="startMove()">席を変える</button>
+      <button class="pbtn" onclick="cancelFlow()">やめる${early ? '<span class="cd" id="cd"></span>' : ''}</button>
+    </div>`;
+  document.getElementById('pfoot').textContent = (r.note ? r.note + ' ' : '') +
+    (early ? '入室したばかりなので、何もしなければ取り消しになります。' : OUT_SEC + '秒たつと、自動で退室になります。');
+  drawMap();
+  if(early) startCountdown(15, cancelFlow); else startCountdown(OUT_SEC, doOut);
+}
+function doOut(){
+  if(!FLOW || FLOW.mode !== 'room' || FLOW.sending) return;
+  const flow = FLOW;
+  flow.sending = true;
+  stopCountdown();
+  document.getElementById('pbody').innerHTML = '<p class="ask">退室を記録しています…</p>';
+  apiGet('seatOut', { ticket: flow.ticket, clientUuid: flow.cu }).then(function (r) {
+    if(FLOW !== flow) return;
+    endFlow(); showResult(r); loadMap();
+  }).catch(function () {
+    if(FLOW !== flow) return;
+    endFlow();
+    showResult({ ok:false, message:'通信できませんでした。退室できたかを座席表で確かめ、席が残っていればもう一度かざしてください。' });
+    loadMap();
+  });
+}
+function startMove(){
+  if(!FLOW || FLOW.sending) return;
+  stopCountdown();
+  FLOW.mode = 'move';
+  document.getElementById('pkick').textContent = 'CHANGE SEAT';
+  document.getElementById('pask').textContent = '新しい席をえらんでください。';
+  document.getElementById('pfoot').textContent = '学習時間の記録はそのまま続きます。';
+  renderPickBody();
+  startCountdown(PICK_SEC, cancelFlow);
 }
 
+function cancelFlow(){
+  if(FLOW && FLOW.sending) return;      // 送っている最中は取り消さない
+  const wasPick = FLOW && FLOW.mode === 'pick';
+  endFlow();
+  showResult({ ok:false, cancel:true, message: wasPick
+    ? '受付を取り消しました。座席を選ぶと記録が始まります。'
+    : '操作を取り消しました。' });
+}
+
+/* ---- パネルの出し入れ ---- */
+function openPanel(kick, name, ask){
+  document.getElementById('stage').style.display = 'none';
+  document.getElementById('manualrow').style.display = 'none';
+  document.getElementById('pkick').textContent = kick;
+  document.getElementById('pwho').textContent = (name || '') + ' さん';
+  document.getElementById('pask').textContent = ask || '';
+  document.getElementById('pfoot').textContent = '';
+  document.getElementById('panel').classList.add('show');
+  document.getElementById('map').classList.add('picking');
+  setStatus('');
+}
+function endFlow(){
+  stopCountdown();
+  FLOW = null;
+  document.getElementById('panel').classList.remove('show');
+  document.getElementById('stage').style.display = '';
+  document.getElementById('manualrow').style.display = '';
+  document.getElementById('map').classList.remove('picking');
+  if(VIEW) VIEW.seats.forEach(function (s) { delete s.ok; });
+  drawMap();
+}
+function startCountdown(sec, onEnd){
+  stopCountdown();
+  let left = sec;
+  const paint = function () { const el = document.getElementById('cd'); if(el) el.textContent = '（' + left + '）'; };
+  paint();
+  tickT = setInterval(function () { left--; paint(); if(left <= 0){ stopCountdown(); onEnd(); } }, 1000);
+}
+function stopCountdown(){ clearInterval(tickT); tickT = null; }
+
+/* ============ 結果の表示 ============ */
 function showResult(r){
   const el = document.getElementById('result');
-  el.className = 'result show' + (r.ok ? (r.type === 'OUT' ? ' out' : '') : ' ng');
-
-  document.getElementById('rmark').textContent = r.ok ? (r.type === 'OUT' ? '↓' : '↑') : '!';
-  document.getElementById('rname').textContent = r.name || '';
-  document.getElementById('rmsg').textContent  = r.message || '';
-  document.getElementById('rmeta').textContent =
-    (r.ok && r.type === 'OUT' && r.monthMinutes != null)
-      ? '今月の合計 ' + fmt(r.monthMinutes) : '';
+  const isOut = r.ok && r.type === 'OUT';
+  el.className = 'result show' + (r.ok ? (isOut ? ' out' : '') : ' ng');
+  document.getElementById('rmark').textContent =
+    r.ok ? (r.ignored ? 'CHECKED' : (r.type === 'OUT' ? 'GOOD BYE' : (r.type === 'MOVE' ? 'SEAT CHANGED' : 'WELCOME'))) : (r.cancel ? 'CANCELED' : 'NOTICE');
+  document.getElementById('rname').textContent = r.name ? r.name + ' さん' : '';
+  const big = document.getElementById('rbig');
+  big.innerHTML = (r.ok && r.seatNo) ? esc(r.seatNo) + '<span style="font-family:Zen Kaku Gothic New,sans-serif;font-size:18px;color:var(--ink);margin-left:6px">番の席</span>' : '';
+  big.style.display = (r.ok && r.seatNo) ? '' : 'none';
+  // 席番号を大きく出すときは、文は短くする
+  document.getElementById('rmsg').textContent = (r.ok && r.seatNo)
+    ? (r.type === 'MOVE' ? '席を移りました。' : 'いってらっしゃい。') : (r.message || '');
+  document.getElementById('rmeta').textContent = (isOut && r.monthMinutes != null) ? '今月の合計 ' + fmt(r.monthMinutes) : '';
   document.getElementById('rnote').textContent = r.note || '';
-
-  beep(r.ok ? (r.type === 'OUT' ? 660 : 880) : 240, r.ok ? 0.12 : 0.3);
+  beep(r.ok ? (isOut ? 660 : 880) : 240, r.ok ? 0.12 : 0.3);
   setStatus('読み取れます');
-
-  setTimeout(()=>{ el.className = 'result'; busy = false; }, r.ok ? 2600 : 3800);
+  clearTimeout(timer);
+  timer = setTimeout(function () { el.className = 'result'; busy = false; }, r.ok ? 2600 : 3600);
+}
+function onLegacyResult(r){
+  showResult(r);
+  if(r.ok && !r.ignored) refreshLegacy();
 }
 
-/* ============ 在室者 ============ */
-function refreshRoom(){
+/* ============ 座席表 ============ */
+function loadMap(first){
   if (!API_BASE || !API_KEY) return;
-  apiGet('roomStatus', { campus: CAMPUS }).then(applyRoom).catch(()=>{ refreshRoomFallback(); });
-}
-
-function applyRoom(r){
-  {
-    const list = r.list || [];
-    const seatsEl = document.getElementById('seats');
-    const gauge = document.querySelector('.gauge');
-    const fill = document.getElementById('gaugefill');
-
-    if(r.seats){
-      // 残席が少ないほど色が変わる
-      const cls = r.free === 0 ? 'full' : (r.free <= Math.max(3, Math.round(r.seats*0.1)) ? 'few' : '');
-      seatsEl.className = 'seats ' + cls;
-      gauge.className = 'gauge ' + cls;
-      seatsEl.innerHTML = (r.free === 0 ? '満席' : r.free) +
-        (r.free === 0 ? '' : '<span>席あく</span>');
-      fill.style.width = Math.min(100, r.used / r.seats * 100) + '%';
-      if(r.over > 0) seatsEl.innerHTML = '満席<span>+' + r.over + '人</span>';
-    }else{
-      seatsEl.innerHTML = '–<span>座席数が未設定</span>';
-      fill.style.width = '0%';
+  apiGet('seatMap', { campus: CAMPUS }).then(function (r) {
+    if(r && r.ok && r.enabled){
+      SEATMODE = true;
+      document.getElementById('shell').classList.remove('legacy-only');
+      document.getElementById('seatwrap').classList.add('show');
+      document.getElementById('legacy').style.display = 'none';
+      if(!FLOW) applyView(r);
+    }else if(r && r.ok && r.enabled === false){
+      useLegacy();                       // この校舎は座席管理を使わない
+    }else if(first || !SEATMODE || /不明なリクエスト/.test(String(r && r.message))){
+      useLegacy();                       // サーバーが古い・起動時に取れない
     }
+    // 座席表で動いている最中の一時的なエラーでは、表示を切り替えない
+  }).catch(function () {
+    // サーバーが古い（seatMap が無い）・通信できないときは、これまでの表示で動かす
+    if(first || !SEATMODE) useLegacy();
+  });
+}
+function useLegacy(){
+  SEATMODE = false;
+  document.getElementById('shell').classList.add('legacy-only');
+  document.getElementById('seatwrap').classList.remove('show');
+  document.getElementById('legacy').style.display = '';
+  refreshLegacy();
+}
+function applyView(r){
+  VIEW = { seats: r.seats || [], total: r.total, free: r.free, used: r.used, stop: r.stop };
+  const freeHs3 = VIEW.seats.filter(function (s) { return s.k && s.s === 0; }).length;
+  document.getElementById('seatcnt').innerHTML = '空き<b>' + VIEW.free + '</b>／ ' + (VIEW.total - (VIEW.stop || 0)) + '席' +
+    '<i>うち高3専用の空き ' + freeHs3 + '</i>';
+  drawMap();
+}
+function seatById(id){ return VIEW ? VIEW.seats.filter(function (s) { return s.id === id; })[0] : null; }
 
-    document.getElementById('count').innerHTML =
-      list.length + '<span>人が在室中' + (r.seats ? ' / ' + r.seats + '席' : '') + '</span>';
-
-    const box = document.getElementById('people');
-    if(!list.length){ box.innerHTML = '<p class="empty">いま在室している生徒はいません。</p>'; return; }
-    box.innerHTML = list.map(p=>`
-      <div class="person ${p.elapsed>=480?'long':''}">
-        <span>${esc(p.studentId)}</span>
-        <span class="t">${fmt(p.elapsed)}</span>
-      </div>`).join('');
-  }
+function drawMap(){
+  if(!VIEW) return;
+  const map = document.getElementById('map');
+  const seats = VIEW.seats;
+  let maxC = 0, maxR = 0;
+  const colHas = {};
+  seats.forEach(function (s) { maxC = Math.max(maxC, s.c); maxR = Math.max(maxR, s.r); colHas[s.c] = true; });
+  const door = DOORS[CAMPUS];
+  const rowsN = maxR + (door ? 1 : 0);
+  // 席のない列は通路として細くする
+  const cols = []; for (let c = 1; c <= maxC; c++) cols.push(colHas[c] ? 'minmax(0,1fr)' : 'minmax(10px,.55fr)');
+  map.style.gridTemplateColumns = cols.join(' ');
+  map.style.gridTemplateRows = 'repeat(' + rowsN + ', minmax(0,1fr))';
+  // 背中合わせの島は、くっつけて見せる（隣の列も席なら左の余白を詰める）
+  const picking = FLOW && (FLOW.mode === 'pick' || FLOW.mode === 'move');
+  map.innerHTML = seats.map(function (s) {
+    const cls = ['seat'];
+    if(s.k) cls.push('k');
+    if(s.s === 1) cls.push('u');
+    if(s.s === 2) cls.push('x');
+    if(picking){
+      if(s.ok) cls.push('can'); else if(s.s === 0) cls.push('no');
+      if(FLOW.sel === s.id) cls.push('sel');
+      if(FLOW.last === s.id && FLOW.sel !== s.id && s.ok) cls.push('last');
+    }
+    if(FLOW && FLOW.cur === s.id) cls.push('cur');
+    const click = picking && s.ok ? ' data-seat="' + esc(s.id) + '"' : '';
+    const label = s.s === 2 ? '×' : s.n;
+    return '<button class="' + cls.join(' ') + '" style="grid-column:' + s.c + ';grid-row:' + s.r + '"' + click +
+      ' aria-label="' + s.n + '番' + (s.k ? '（高3専用）' : '') + (s.s === 1 ? ' 使用中' : (s.s === 2 ? ' 使えない' : ' 空き')) + '"' +
+      (picking && s.ok ? '' : ' tabindex="-1"') + '>' + label + '</button>';
+  }).join('') + (door ? '<div class="door" style="grid-column:' + door + ';grid-row:' + rowsN + '">入口 ▼</div>' : '');
 }
 
-/**
- * サーバー側が古く roomStatus が無い場合や、通信に失敗した場合の逃げ道。
- * 在室者一覧だけを取り、空席の表示は伏せる。
- */
-function refreshRoomFallback(){
+/* ============ これまでの在室者表示（座席管理を使わない校舎） ============ */
+function refreshLegacy(){
   if (!API_BASE || !API_KEY) return;
-  apiGet('listInRoom', { campus: CAMPUS }).then(list=>{
-    applyRoom({ campus:CAMPUS, seats:0, used:list.length, free:null, over:0, list:list });
-  }).catch(()=>{});
+  apiGet('roomStatus', { campus: CAMPUS }).then(applyRoom).catch(function () {
+    apiGet('listInRoom', { campus: CAMPUS }).then(function (list) {
+      applyRoom({ campus:CAMPUS, seats:0, used:list.length, free:null, over:0, list:list });
+    }).catch(function () {});
+  });
 }
+function applyRoom(r){
+  const list = r.list || [];
+  const seatsEl = document.getElementById('seats');
+  const gauge = document.querySelector('.gauge');
+  const fill = document.getElementById('gaugefill');
+  if(r.seats){
+    const cls = r.free === 0 ? 'full' : (r.free <= Math.max(3, Math.round(r.seats*0.1)) ? 'few' : '');
+    seatsEl.className = 'seats ' + cls; gauge.className = 'gauge ' + cls;
+    seatsEl.innerHTML = (r.free === 0 ? '満席' : r.free) + (r.free === 0 ? '' : '<span>席あく</span>');
+    fill.style.width = Math.min(100, r.used / r.seats * 100) + '%';
+    if(r.over > 0) seatsEl.innerHTML = '満席<span>+' + r.over + '人</span>';
+  }else{
+    seatsEl.innerHTML = '–<span>座席数が未設定</span>'; fill.style.width = '0%';
+  }
+  document.getElementById('count').innerHTML = list.length + '<span>人が在室中' + (r.seats ? ' / ' + r.seats + '席' : '') + '</span>';
+  const box = document.getElementById('people');
+  if(!list.length){ box.innerHTML = '<p class="empty">いま在室している生徒はいません。</p>'; return; }
+  box.innerHTML = list.map(function (p) {
+    return '<div class="person ' + (p.elapsed>=480?'long':'') + '"><span>' + esc(p.studentId) + '</span><span class="t">' + fmt(p.elapsed) + '</span></div>';
+  }).join('');
+}
+
+// 席のボタン（座席表・前回の席）は data-seat で受ける（席IDを onclick の文字列に埋め込まない）
+document.addEventListener('click', function (e) {
+  const b = e.target.closest ? e.target.closest('[data-seat]') : null;
+  if(b && !b.disabled) selectSeat(b.getAttribute('data-seat'));
+});
 
 /* ============ 手入力・バーコードリーダー ============ */
 const manual = document.getElementById('manual');
-document.getElementById('send').addEventListener('click', ()=>{
-  const v = manual.value.trim();
-  if(v){ submit(v); manual.value=''; }
+document.getElementById('send').addEventListener('click', function () {
+  const v = manual.value.trim(); if(v){ submit(v); manual.value=''; }
 });
-manual.addEventListener('keydown', e=>{
-  if(e.key === 'Enter'){
-    const v = manual.value.trim();
-    if(v){ submit(v); manual.value=''; }
-  }
+manual.addEventListener('keydown', function (e) {
+  if(e.key === 'Enter'){ const v = manual.value.trim(); if(v){ submit(v); manual.value=''; } }
 });
-// USBのバーコードリーダーは「入力＋Enter」を送ってくるだけなので、
-// どこをクリックしていても手入力欄が拾えるようにしておく
-document.addEventListener('keydown', e=>{
-  if(document.activeElement !== manual && /^[0-9A-Za-z\-]$/.test(e.key)) manual.focus();
+document.addEventListener('keydown', function (e) {
+  if(!FLOW && document.activeElement !== manual && /^[0-9A-Za-z\-]$/.test(e.key)) manual.focus();
 });
 
 /* ============ 小道具 ============ */
 function setStatus(s){ document.getElementById('status').textContent = s; }
+function toastStatus(s){ document.getElementById('pask').textContent = s; }
 function fmt(min){ const h=Math.floor(min/60), m=min%60; return h? h+'時間'+m+'分' : m+'分'; }
-function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function uuid(){
   if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
   return 'x'+Date.now()+Math.random().toString(16).slice(2);
@@ -435,22 +670,17 @@ function beep(freq, sec){
     o.start(); o.stop(actx.currentTime + sec);
   }catch(e){}
 }
-
-/* ============ 画面サイズ（スマホのアドレスバー分のズレ対策） ============ */
-/**
- * 100vh はスマホのブラウザだとアドレスバーの表示/非表示で値がぶれる。
- * dvh 未対応の古いブラウザ向けに、実際に見えている高さを --vh に反映しておく。
- */
-function syncViewportHeight(){
-  document.documentElement.style.setProperty('--vh', window.innerHeight + 'px');
-}
+function syncViewportHeight(){ document.documentElement.style.setProperty('--vh', window.innerHeight + 'px'); }
 syncViewportHeight();
 window.addEventListener('resize', syncViewportHeight);
 window.addEventListener('orientationchange', syncViewportHeight);
 
 /* ============ 起動 ============ */
 initCamera();
-setInterval(refreshRoom, 60000);
+// 座席表は30秒ごと（操作中は止める）、これまでの表示は60秒ごと
+setInterval(function () { if(!FLOW){ if(SEATMODE) loadMap(); } }, 30000);
+// これまでの表示で動いているときも、座席表が取れるようになったら切り替える（起動時の通信エラーなど）
+setInterval(function () { if(!SEATMODE && !FLOW){ refreshLegacy(); loadMap(); } }, 60000);
 </script>
 </body>
 </html>
