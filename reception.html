@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0D1029">
+<!-- このページから外へ出る通信に、アドレス（合言葉が入っていることがある）を付けない -->
+<meta name="referrer" content="no-referrer">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -216,17 +218,45 @@ video{width:100%;height:100%;object-fit:cover;display:block}
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<!-- QRの読み取り部品（jsQR 1.4.0, Apache-2.0）。外部のCDNではなく、このページと同じ場所に置いたものを使う。
+     integrity は中身の指紋。ファイルが書き換えられていたら読み込まれない -->
+<script src="./jsQR.js" integrity="sha384-b5Ya4Bq3qCyz39m2ISh+4DxjAIljdeFwK/BsXLuj9gugaNwAcj/ia15fxNZL9Nlx" crossorigin="anonymous"></script>
 <script>
 /**
  * このページは GitHub Pages など、Apps Script の外（単独ページ）で動かす前提。
+ *
+ * 【設定のしかた】職員が iPad で1回だけ「設定用URL」を開く。
  *   https://xxxx.github.io/yyyy/reception.html?base=<ウェブアプリURL>&k=<受付キー>&campus=姫路校
+ * 開くと、合言葉などをこの端末の中に保存し、アドレスバーからは消す（履歴や画面の写真から漏れないように）。
+ * 2回目からは https://xxxx.github.io/yyyy/reception.html だけで開ける。
+ * 端末の設定を消すときは …/reception.html?reset=1 を開く。
  * 座席管理を使う校舎かどうかは、サーバーの座席表（seatMap）が返ってくるかで決まる。
  */
+const CFG_KEY = 'sq_reception_v1';
 const qs = new URLSearchParams(location.search);
-const API_BASE = (qs.get('base') || '').trim();
-const API_KEY  = (qs.get('k') || '').trim();
-const CAMPUS = (qs.get('campus') || '').trim();
+let API_BASE = '', API_KEY = '', CAMPUS = '', BAD_BASE = false;
+(function setupConfig(){
+  const store = (function(){ try { return window.localStorage; } catch (e) { return null; } })();
+  if (qs.has('reset')) {
+    try { store && store.removeItem(CFG_KEY); } catch (e) {}
+    history.replaceState(null, '', location.pathname);
+    return;
+  }
+  if (qs.get('base') && qs.get('k')) {
+    const cfg = { base: qs.get('base').trim(), k: qs.get('k').trim(), campus: (qs.get('campus') || '').trim() };
+    if (!/^https:\/\/script\.google\.com\/(a\/macros\/[\w.-]+|macros)\/s\/[\w-]+\/exec$/.test(cfg.base)) {
+      BAD_BASE = true; history.replaceState(null, '', location.pathname); return;   // GASのURL以外へは送らない
+    }
+    try { store && store.setItem(CFG_KEY, JSON.stringify(cfg)); } catch (e) {}
+    API_BASE = cfg.base; API_KEY = cfg.k; CAMPUS = cfg.campus;
+    history.replaceState(null, '', location.pathname);   // アドレスバーから合言葉を消す
+    return;
+  }
+  try {
+    const cfg = JSON.parse((store && store.getItem(CFG_KEY)) || 'null');
+    if (cfg && cfg.base && cfg.k) { API_BASE = cfg.base; API_KEY = cfg.k; CAMPUS = cfg.campus || ''; }
+  } catch (e) {}
+})();
 
 const PICK_SEC = 40;      // 席を選ぶ時間。過ぎたら何も記録せずに戻る
 const OUT_SEC  = 6;       // 在室中にかざしたとき、何もしなければ退室にする秒数
@@ -245,7 +275,9 @@ document.getElementById('campus').textContent = CAMPUS;
 document.getElementById('roomttl').textContent = (CAMPUS || '') + ' 自習室';
 
 if (!API_BASE || !API_KEY) {
-  setStatus('このページのURLに base と k が指定されていません。校舎の管理者に、正しい受付URLをもらってください。');
+  setStatus(BAD_BASE ? '設定用URLの base が Apps Script のURLではありません。正しい設定用URLを開いてください。' : qs.has('reset')
+    ? 'この端末の受付の設定を消しました。使うときは、職員が設定用URLを開いてください。'
+    : 'この端末は受付の設定がされていません。職員が設定用URLを開いてください。');
 } else {
   loadMap(true);
 }
@@ -261,11 +293,19 @@ function apiGet(action, params) {
   // 応答が返らないまま固まらないように、15秒で打ち切る
   const ctl = window.AbortController ? new AbortController() : null;
   const to = ctl ? setTimeout(function () { ctl.abort(); }, 15000) : null;
-  return fetch(u.toString(), ctl ? { signal: ctl.signal } : undefined).then(function (res) {
+  const opt = { referrerPolicy: 'no-referrer', credentials: 'omit' };
+  if (ctl) opt.signal = ctl.signal;
+  return fetch(u.toString(), opt).then(function (res) {
     if (to) clearTimeout(to);
     if (!res.ok) throw new Error('http-' + res.status);
     return res.json();
-  }, function (e) { if (to) clearTimeout(to); throw e; });
+  }, function (e) { if (to) clearTimeout(to); throw e; }).then(function (r) {
+    // 合言葉が変わった・違うとき
+    if (r && r.ok === false && /受付端末の認証に失敗/.test(String(r.message || ''))) {
+      r.message = 'この端末の合言葉が古いか、違っています。職員が新しい設定用URLを開いてください。';
+    }
+    return r;
+  });
 }
 
 /* ============ カメラ ============ */
@@ -407,7 +447,7 @@ function confirmSeat(){
     }
     endFlow();
     showResult(r);
-    loadMap();
+    if(r.seats) applyView(r); else loadMap();   // 結果に最新の座席表が付いていれば取り直さない
   }).catch(function () {
     if(FLOW !== flow) return;
     // 届いたかどうか分からない。かざし直してもらえば、入室できていれば「退室しますか？」が出る
@@ -444,7 +484,8 @@ function doOut(){
   document.getElementById('pbody').innerHTML = '<p class="ask">退室を記録しています…</p>';
   apiGet('seatOut', { ticket: flow.ticket, clientUuid: flow.cu }).then(function (r) {
     if(FLOW !== flow) return;
-    endFlow(); showResult(r); loadMap();
+    endFlow(); showResult(r);
+    if(r.seats) applyView(r); else loadMap();
   }).catch(function () {
     if(FLOW !== flow) return;
     endFlow();
@@ -676,9 +717,34 @@ window.addEventListener('resize', syncViewportHeight);
 window.addEventListener('orientationchange', syncViewportHeight);
 
 /* ============ 起動 ============ */
-initCamera();
-// 座席表は30秒ごと（操作中は止める）、これまでの表示は60秒ごと
-setInterval(function () { if(!FLOW){ if(SEATMODE) loadMap(); } }, 30000);
+// 設定のない端末では、カメラも読み取りも動かさない（何をかざしても送り先がない）
+if (API_BASE && API_KEY) initCamera();
+else { document.getElementById('frame').style.display = 'none'; document.getElementById('hint').textContent = '受付の設定がされていません'; }
+// 座席表は15秒ごと（受付が2台あっても、相手の台で埋まった席がすぐ分かるように）。操作中は下の別の更新を使う
+setInterval(function () { if(!FLOW){ if(SEATMODE) loadMap(); } }, 15000);
+// 席を選んでいる間も4秒ごとに座席表を取り直す。もう1台で埋まった席は選べなくなり、選んでいた席が埋まったら知らせる
+let pickPolling = false;
+setInterval(function () {
+  if(!SEATMODE || !FLOW || FLOW.sending || pickPolling) return;
+  if(FLOW.mode !== 'pick' && FLOW.mode !== 'move') return;
+  const flow = FLOW;
+  pickPolling = true;
+  apiGet('seatMap', { campus: CAMPUS }).then(function (r) {
+    pickPolling = false;
+    if(FLOW !== flow || flow.sending || !r || !r.ok || !r.enabled) return;
+    (r.seats || []).forEach(function (s) { s.ok = (s.s === 0 && (s.k ? !!flow.hs3 : true)) ? 1 : 0; });
+    applyView(r);
+    if(flow.sel){
+      const s = seatById(flow.sel);
+      if(!s || !s.ok){
+        flow.sel = '';
+        document.getElementById('pask').textContent = 'えらんでいた席が、もう1台の受付で埋まりました。ほかの席を選んでください。';
+        beep(240, .25);
+      }
+    }
+    renderPickBody();
+  }).catch(function () { pickPolling = false; });
+}, 4000);
 // これまでの表示で動いているときも、座席表が取れるようになったら切り替える（起動時の通信エラーなど）
 setInterval(function () { if(!SEATMODE && !FLOW){ refreshLegacy(); loadMap(); } }, 60000);
 </script>
